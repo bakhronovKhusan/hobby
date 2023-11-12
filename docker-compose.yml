@@ -1,0 +1,51 @@
+version: "3.8"
+services:
+  test:
+    build: ./docker/fpm
+    volumes:
+      - ./www:/var/www
+    ports:
+      - 9003:80
+    links:
+      - mysql_db
+
+  nginx:
+    build: ./docker/nginx
+    ports:
+      - 8099:80
+    links:
+      - test
+    volumes:
+      - ./www:/var/www
+      - ./docker/fpm/php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./logs/nginx/error.log:/var/www/log/nginx/error.log
+      - ./logs/nginx/access.log:/var/www/logs/nginx/access.log
+
+  mysql_db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root2
+      MYSQL_USER: root2
+      MYSQL_PASSWORD: root2
+      MYSQL_DATABASE: test
+    ports:
+      - 4306:4306
+  
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - 9001:80
+    environment:
+      - PMA_ARBITRARY=1
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+
+  redis-commander:
+    image: rediscommander/redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - 8081:8081
